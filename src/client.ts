@@ -31,8 +31,6 @@ export class Client {
                 })
             );
 
-            let payload: Buffer = new Buffer("test");
-
             let tokenBuf = new Buffer(this.TOKEN_LENGTH);
             tokenBuf.writeUInt32BE(this.token++, 0);
 
@@ -42,7 +40,7 @@ export class Client {
                 this.messageId++,
                 tokenBuf,
                 options,
-                payload
+                Buffer.from([])
             );
 
             this.sendMessage(packet, resolve, reject);
