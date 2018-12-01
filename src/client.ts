@@ -13,9 +13,12 @@ export class Client {
         this.socket.on('message', (msg, rinfo) => {
             let packet = Packet.parse(msg);
 
-            let callback = this.callbacks.get(packet.token.toString('hex'));
+            let token = packet.token.toString('hex');
+
+            let callback = this.callbacks.get(token);
             if (callback !== undefined) {
                 callback(packet);
+                this.callbacks.delete(token);
             }
         });
     }
