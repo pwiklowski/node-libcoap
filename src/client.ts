@@ -24,9 +24,11 @@ export class Client {
     get(uri: string) : Promise<Buffer>{
         return new Promise((resolve, reject)=>{
 
-            let options = Options.from([
-                new Option(OptionValue.URI_PATH, new Buffer("counter"))
-            ]);
+            let options = Options.from(
+                uri.split("/").filter(part => part).map((part)=>{
+                    return new Option(OptionValue.URI_PATH, new Buffer(part))
+                })
+            );
 
             let payload: Buffer = new Buffer("test");
 
