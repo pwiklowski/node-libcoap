@@ -23,6 +23,7 @@ export enum OptionValue {
 	PROXY_URI = 35,
 	PROXY_SCHEME = 39
 }
+
 export class MessageCode {
 	constructor(public readonly major: number, public readonly minor: number) {
 
@@ -43,9 +44,20 @@ export const MSG_CODE = {
 } 
 
 export class Option{
-	constructor(public number: number, public data: Buffer){
+	constructor(public number: OptionValue, public data: Buffer){
 
 	}
+}
+
+export enum ContentType {
+	UNKNOWN = -1, 
+	TEXT_PLAIN = 0,
+	APPLICATION_LINKFORMAT  = 40,
+	APPLICATION_XML         = 41,
+	APPLICATION_OCTETSTREAM = 42,
+	APPLICATION_EXI         = 47,
+	APPLICATION_JSON        = 50,
+	APPLICATION_CBOR        = 60,
 }
 
 export class Options extends Array {
@@ -91,6 +103,7 @@ export class Options extends Array {
 
 export class Packet {
 	version = 1;
+	payloadContentType: ContentType = ContentType.UNKNOWN;
 
 	constructor(
 		public type: MessageType,
@@ -112,15 +125,12 @@ export class Packet {
 		const token = Buffer.alloc(tokenLength);
 		if (tokenLength > 0) buf.copy(token, 0, 4, 4 + tokenLength);
 		
-
 		let optionsStart = 4 + tokenLength;
 
 		let options = new Options();
-
 		let payloadStart = Options.parse(options, buf.slice(optionsStart)) + optionsStart;
 
 		let payload: Buffer;
-
 		if (payloadStart < buf.length && buf[payloadStart] === 0xff) {
 			payload = Buffer.from(buf.slice(payloadStart + 1));
 		} else {
@@ -162,5 +172,12 @@ export class Packet {
 		return ret;
 	}
 
-	
+	getPayloadContentType() : ContentType {
+		this.options.forEach((option:Option)=>{
+			if (option.number === OptionValue.CONTENT_FORMAT){
+				return option.data.readInt8(0);
+			}
+		});
+		return ContentType.UNKNOWN;
+	}
 }

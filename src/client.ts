@@ -15,15 +15,13 @@ export class Client {
 
             let callback = this.callbacks.get(packet.token.toString('hex'));
             if (callback !== undefined) {
-                //TODO pass content type
-                callback(packet.payload);
+                callback(packet);
             }
         });
     }
 
-    get(uri: string) : Promise<Buffer>{
+    get(uri: string) : Promise<Packet>{
         return new Promise((resolve, reject)=>{
-
             let options = Options.from(
                 uri.split("/").filter(part => part).map((part)=>{
                     return new Option(OptionValue.URI_PATH, new Buffer(part))
