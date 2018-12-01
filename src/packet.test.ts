@@ -36,19 +36,50 @@ test('if 4 option with complex path is properly serialized', () => {
 
 test('if packet is properly serialized', ()=>{
     let options = Options.from([
-        new Option(11, new Buffer("counter")),
+        new Option(OptionValue.URI_PATH, new Buffer("counter")),
         new Option(OptionValue.CONTENT_FORMAT, new Buffer([0x32]))
     ]);
 
     let payload: Buffer = new Buffer([]);
-
+    let tokenBuf = new Buffer(4);
+    tokenBuf.writeUInt32BE(this.token++, 0);
     let packet = new Packet(
         MessageType.CON,
         MSG_CODE.GET,
         0,
+        tokenBuf,
         options,
         payload
     );
 
     expect(packet.serialize()).toEqual(new Buffer("4401000000000000b7636f756e7465721132","hex"));
+});
+
+test('if options are properly parsed', ()=>{
+    let data = new Buffer([183, 99, 111, 117, 110, 116, 101, 114, 
+        0x02, 0x70, 0x72,
+        0x05, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+        0x11, 0x32]);
+
+    let options = new Options();
+
+    let len = Options.parse(options, data);
+
+    expect(len).toEqual(data.length);
+    expect(options.length).toEqual(4);
+
+
+});
+
+test('if packet is properly parsed', ()=>{
+    let data = new Buffer("4401000000000000b7636f756e7465721132","hex")
+    let packet = Packet.parse(data);
+    console.log(packet);
+    expect(packet.version).toEqual(1);
+    expect(packet.type).toEqual(MessageType.CON);
+    expect(packet.code).toEqual(MSG_CODE.GET);
+    expect(packet.messageId).toEqual(0);
+    expect(packet.options.length).toEqual(2);
+    expect(packet.payload.length).toEqual(0);
+
 });

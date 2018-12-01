@@ -1,6 +1,4 @@
 
-let tokenValue = 0;
-
 export enum MessageType {
 	CON = 0, 
 	NON = 1,
@@ -79,20 +77,59 @@ export class Options extends Array {
 		}
 	}
 
+	static parse(options:Options, buf:Buffer):number{
+		let offset = 0;
+		while(buf[offset] !== 0xFF && buf[offset] !== undefined) {
+			let number = buf[offset] >> 4;
+			let length = buf[offset] & 0xF;
+			options.push(new Option(number, buf.slice(offset+1, offset+length+1)));
+			offset += length + 1;
+		}
+		return offset;
+	}
 }
 
 export class Packet {
 	version = 1;
-	token: Buffer = new Buffer(4);
 
 	constructor(
 		public type: MessageType,
 		public code: MessageCode,
 		public messageId: number,
+		public token: Buffer,
 		public options: Options,
 		public payload: Buffer,
 	) {
-		this.token.writeInt32LE(tokenValue++, 0);
+	}
+
+	public static parse(buf: Buffer): Packet {
+		const version = (buf[0] >>> 6) & 0b11;
+		const type = (buf[0] >>> 4) & 0b11;
+		const tokenLength = buf[0] & 0b1111;
+		const code = MessageCode.from(buf[1]);
+		const messageId = buf[2] * (buf[3]<<8);
+
+		const token = Buffer.alloc(tokenLength);
+		if (tokenLength > 0) buf.copy(token, 0, 4, 4 + tokenLength);
+		
+
+		let optionsStart = 4 + tokenLength;
+
+		let options = new Options();
+
+		let payloadStart = Options.parse(options, buf.slice(optionsStart)) + optionsStart;
+
+		let payload: Buffer;
+
+		if (payloadStart < buf.length && buf[payloadStart] === 0xff) {
+			payload = Buffer.from(buf.slice(payloadStart + 1));
+		} else {
+			payload = Buffer.from([]);
+		}
+
+		return new Packet(
+			type, code, messageId, token, options, payload,
+		);
 	}
 
 	public serialize(): Buffer {
