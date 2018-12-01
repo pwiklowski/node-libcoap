@@ -7,6 +7,7 @@ export class Client {
     messageId = 0;
     token = 0;
     callbacks = new Map<string, Function>();
+    timouts = new Map<string, Function>();
 
     constructor(private address:string, private port: number) {
         this.socket = dgram.createSocket('udp4');
@@ -19,6 +20,7 @@ export class Client {
             if (callback !== undefined) {
                 callback(packet);
                 this.callbacks.delete(token);
+                this.timouts.delete(token);
             }
         });
     }
@@ -49,9 +51,21 @@ export class Client {
 
     sendMessage(packet : Packet, resolve, reject) {
         this.callbacks.set(packet.token.toString('hex'), resolve);
+        let timout = () => {
+            console.log(packet.token.toString('hex'));
+            reject();
+            this.callbacks.delete(packet.token.toString('hex'));
+            this.timouts.delete(packet.token.toString('hex'));
 
-        //TODO handle reject for timout
-
+            console.log(this.callbacks, this.timouts);
+        }
+        setTimeout(()=>{
+            let timeout = this.timouts.get(packet.token.toString('hex'));
+            if (timeout !== undefined) {
+                timout();
+            }
+        }, 3000);
+        this.timouts.set(packet.token.toString('hex'), timout);
         this.socket.send(packet.serialize(), this.port, this.address);
     }
 }
