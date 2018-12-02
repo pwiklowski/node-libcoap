@@ -11,7 +11,8 @@
   "license": "MIT",
   "dependencies": {
     "@types/node": "^10.12.10",
-    "dgram": "^1.0.1"
+    "dgram": "^1.0.1",
+    "rxjs": "^6.3.3"
   },
   "devDependencies": {
     "@types/jest": "^23.3.10",
