@@ -1,4 +1,4 @@
-import { Packet, Options, Option, MessageType, MSG_CODE, OptionValue } from "./packet";
+import { Packet, Options, Option, MessageType, MessageCode, OptionValue } from "./packet";
 
 test('if one option is properly serialized', () => {
     let options = Options.from([
@@ -77,7 +77,7 @@ test('if packet is properly parsed', ()=>{
     console.log(packet);
     expect(packet.version).toEqual(1);
     expect(packet.type).toEqual(MessageType.CON);
-    expect(packet.code).toEqual(MSG_CODE.GET);
+    expect(packet.code).toEqual(MessageCode.GET);
     expect(packet.messageId).toEqual(0);
     expect(packet.options.length).toEqual(2);
     expect(packet.payload.length).toEqual(0);

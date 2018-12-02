@@ -25,6 +25,11 @@ export enum OptionValue {
 }
 
 export class MessageCode {
+	static GET = new MessageCode(0, 1);
+	static POST = new MessageCode(0, 2);
+	static PUT = new MessageCode(0, 3);
+	static DELETE = new MessageCode(0, 4);
+
 	constructor(public readonly major: number, public readonly minor: number) {
 
 	}
@@ -38,10 +43,6 @@ export class MessageCode {
 		return ((this.major & 0b111) << 5) + (this.minor & 0b11111);
 	}
 }
-
-export const MSG_CODE = {
-	GET: new MessageCode(0, 1)
-} 
 
 export class Option{
 	constructor(public number: OptionValue, public data: Buffer){
@@ -103,7 +104,6 @@ export class Options extends Array {
 
 export class Packet {
 	version = 1;
-	payloadContentType: ContentType = ContentType.UNKNOWN;
 
 	constructor(
 		public type: MessageType,

@@ -1,5 +1,5 @@
 import * as dgram from "dgram";
-import { Packet, MessageType, MessageCode, MSG_CODE, Option, Options, OptionValue } from "./packet";
+import { Packet, MessageType, MessageCode, Option, Options, OptionValue } from "./packet";
 
 export class Client {
     TOKEN_LENGTH = 4;
@@ -27,37 +27,49 @@ export class Client {
 
     get(uri: string) : Promise<Packet>{
         return new Promise((resolve, reject)=>{
-            let options = Options.from(
-                uri.split("/").filter(part => part).map((part)=>{
-                    return new Option(OptionValue.URI_PATH, new Buffer(part))
-                })
-            );
-
-            let tokenBuf = new Buffer(this.TOKEN_LENGTH);
-            tokenBuf.writeUInt32BE(this.token++, 0);
-
-            let packet = new Packet(
-                MessageType.CON,
-                MSG_CODE.GET,
-                this.messageId++,
-                tokenBuf,
-                options,
-                Buffer.from([])
-            );
-
+            let packet = this.makePacket(MessageType.CON, MessageCode.GET, uri, Buffer.from([]));
             this.sendMessage(packet, resolve, reject);
         });
+    }
+
+    post(uri: string, buffer: Buffer = null) : Promise<Packet>{
+        return new Promise((resolve, reject)=>{
+            let packet = this.makePacket(MessageType.CON, MessageCode.POST, uri, buffer);
+            this.sendMessage(packet, resolve, reject);
+        });
+    }
+
+    put(uri: string, buffer: Buffer = null) : Promise<Packet>{
+        return new Promise((resolve, reject)=>{
+            let packet = this.makePacket(MessageType.CON, MessageCode.PUT, uri, buffer);
+            this.sendMessage(packet, resolve, reject);
+        });
+    }
+
+    delte(uri: string) : Promise<Packet>{
+        return new Promise((resolve, reject)=>{
+            let packet = this.makePacket(MessageType.CON, MessageCode.DELETE, uri, Buffer.from([]));
+            this.sendMessage(packet, resolve, reject);
+        });
+    }
+
+    private makePacket(type: MessageType, code: MessageCode, uri: string, buffer: Buffer) {
+        let options = Options.from(uri.split("/").filter(part => part).map((part) => {
+            return new Option(OptionValue.URI_PATH, new Buffer(part));
+        }));
+        let tokenBuf = new Buffer(this.TOKEN_LENGTH);
+        tokenBuf.writeUInt32BE(this.token++, 0);
+        let packet = new Packet(type, code, this.messageId++,
+            tokenBuf, options, buffer);
+        return packet;
     }
 
     sendMessage(packet : Packet, resolve, reject) {
         this.callbacks.set(packet.token.toString('hex'), resolve);
         let timout = () => {
-            console.log(packet.token.toString('hex'));
             reject();
             this.callbacks.delete(packet.token.toString('hex'));
             this.timouts.delete(packet.token.toString('hex'));
-
-            console.log(this.callbacks, this.timouts);
         }
         setTimeout(()=>{
             let timeout = this.timouts.get(packet.token.toString('hex'));
