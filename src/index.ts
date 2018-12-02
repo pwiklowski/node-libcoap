@@ -14,8 +14,6 @@ client.get("/counter").then((message:Packet)=>{
 }).catch(()=>{
     console.log("timeout");
 });
-client.get("/counter/pr/count").then((message:Packet)=>{
+client.observe("/counter/pr/count").subscribe((message:Packet)=>{
     console.log("received response", message);
-}).catch(()=>{
-    console.log("timeout");
 });

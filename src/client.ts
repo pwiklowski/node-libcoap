@@ -1,5 +1,6 @@
 import * as dgram from "dgram";
 import { Packet, MessageType, MessageCode, Option, Options, OptionValue } from "./packet";
+import { Observable, Subscription, Observer } from 'rxjs';
 
 export class Client {
     TOKEN_LENGTH = 4;
@@ -19,7 +20,10 @@ export class Client {
             let callback = this.callbacks.get(token);
             if (callback !== undefined) {
                 callback(packet);
-                this.callbacks.delete(token);
+
+                if (packet.options.contains(OptionValue.OBSERVE)){
+                    this.callbacks.delete(token);
+                }
                 this.timouts.delete(token);
             }
         });
@@ -31,6 +35,23 @@ export class Client {
             this.sendMessage(packet, resolve, reject);
         });
     }
+
+    observe(uri: string) : Observable<Packet> {
+        return new Observable((observer)=>{
+            let packet = this.makePacket(MessageType.CON, MessageCode.GET, uri, Buffer.from([]));
+
+            packet.options.push(new Option(OptionValue.OBSERVE, new Buffer([0])));
+            this.sendMessage(packet, (packet)=>{
+                //success
+                console.log("received response");
+                observer.next(packet);
+            }, ()=>{
+                //error
+            });
+
+        });
+    }
+    
 
     post(uri: string, buffer: Buffer = null) : Promise<Packet>{
         return new Promise((resolve, reject)=>{

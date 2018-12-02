@@ -69,6 +69,15 @@ export class Options extends Array {
 		return options;
 	}
 
+	contains(option: OptionValue) : boolean {
+		this.forEach(element => {
+			if (element.number === option){
+				return true;
+			}
+		});
+		return false;
+	}
+
 	serialize(): Buffer {
 		if (this && this.length) {
 			let delta = 0;
