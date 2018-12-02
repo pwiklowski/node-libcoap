@@ -182,11 +182,13 @@ export class Packet {
 	}
 
 	getPayloadContentType() : ContentType {
+		let type = ContentType.UNKNOWN;
 		this.options.forEach((option:Option)=>{
 			if (option.number === OptionValue.CONTENT_FORMAT){
-				return option.data.readInt8(0);
+				type = option.data.readIntBE(0, option.data.length);
+				return;
 			}
 		});
-		return ContentType.UNKNOWN;
+		return type;
 	}
 }
