@@ -21,6 +21,10 @@ export class Client {
             if (callback !== undefined) {
                 callback(packet);
 
+                if (packet.type === MessageType.CON){
+                    this.ack(packet);
+                }
+
                 if (packet.options.contains(OptionValue.OBSERVE)){
                     this.callbacks.delete(token);
                 }
@@ -100,5 +104,10 @@ export class Client {
         }, 3000);
         this.timouts.set(packet.token.toString('hex'), timout);
         this.socket.send(packet.serialize(), this.port, this.address);
+    }
+
+    private ack(packet: Packet) {
+        let p = this.makePacket(MessageType.ACK, packet.code, "", Buffer.from([]));
+        this.sendMessage(p,()=>{}, ()=>{});
     }
 }
