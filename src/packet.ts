@@ -1,3 +1,4 @@
+import * as cbor from "borc";
 
 export enum MessageType {
 	CON = 0, 
@@ -179,6 +180,17 @@ export class Packet {
 		}
 
 		return ret;
+	}
+
+	getPayloadObject() {
+		let contentType = this.getPayloadContentType();
+
+		if (contentType === ContentType.APPLICATION_CBOR){
+			return cbor.decodeFirst(this.payload);
+		} else if (contentType === ContentType.APPLICATION_JSON) {
+			return this.payload.toString();
+		}
+		return null;
 	}
 
 	getPayloadContentType() : ContentType {
