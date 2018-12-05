@@ -45,7 +45,7 @@ test('if packet is properly serialized', ()=>{
     tokenBuf.writeUInt32BE(this.token++, 0);
     let packet = new Packet(
         MessageType.CON,
-        MSG_CODE.GET,
+        MessageCode.GET,
         0,
         tokenBuf,
         options,
