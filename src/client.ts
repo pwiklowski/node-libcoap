@@ -79,9 +79,13 @@ export class Client {
     }
 
     private makePacket(type: MessageType, code: MessageCode, uri: string, buffer: Buffer) {
-        let options = Options.from(uri.split("/").filter(part => part).map((part) => {
-            return new Option(OptionValue.URI_PATH, new Buffer(part));
-        }));
+
+        let options = new Options();
+        if (uri) {
+            options = Options.from(uri.split("/").filter(part => part).map((part) => {
+                return new Option(OptionValue.URI_PATH, new Buffer(part));
+            }));
+        }
         let tokenBuf = new Buffer(this.TOKEN_LENGTH);
         tokenBuf.writeUInt32BE(this.token++, 0);
         let packet = new Packet(type, code, this.messageId++,
