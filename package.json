@@ -2,7 +2,7 @@
   "name": "libcoap",
   "version": "0.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "./dist",
   "scripts": {
     "test": "ts-jest",
     "build": "tsc"
