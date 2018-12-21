@@ -2,6 +2,11 @@ import * as dgram from "dgram";
 import { Packet, MessageType, MessageCode, Option, Options, OptionValue } from "./packet";
 import { Observable, Subscription, Observer } from 'rxjs';
 
+export class Response { 
+    packet: Packet;
+    remote: dgram.RemoteInfo;
+}
+
 export class Client {
     TOKEN_LENGTH = 4;
     socket: dgram.Socket = null;
@@ -10,16 +15,17 @@ export class Client {
     callbacks = new Map<string, Function>();
     timouts = new Map<string, Function>();
 
+
     constructor(private address:string, private port: number) {
         this.socket = dgram.createSocket('udp4');
-        this.socket.on('message', (msg, rinfo) => {
+        this.socket.on('message', (msg, remote) => {
             let packet = Packet.parse(msg);
 
             let token = packet.token.toString('hex');
 
             let callback = this.callbacks.get(token);
             if (callback !== undefined) {
-                callback(packet);
+                callback({packet, remote});
 
                 if (packet.type === MessageType.CON){
                     this.ack(packet);
@@ -33,22 +39,20 @@ export class Client {
         });
     }
 
-    get(uri: string) : Promise<Packet>{
+    get(uri: string) : Promise<Response>{
         return new Promise((resolve, reject)=>{
             let packet = this.makePacket(MessageType.CON, MessageCode.GET, uri, Buffer.from([]));
             this.sendMessage(packet, resolve, reject);
         });
     }
 
-    observe(uri: string) : Observable<Packet> {
+    observe(uri: string) : Observable<Response> {
         return new Observable((observer)=>{
-            let packet = this.makePacket(MessageType.CON, MessageCode.GET, uri, Buffer.from([]));
+            let observe = this.makePacket(MessageType.CON, MessageCode.GET, uri, Buffer.from([]));
+            observe.options.push(new Option(OptionValue.OBSERVE, new Buffer([0])));
 
-            packet.options.push(new Option(OptionValue.OBSERVE, new Buffer([0])));
-            this.sendMessage(packet, (packet)=>{
-                //success
-                console.log("received response");
-                observer.next(packet);
+            this.sendMessage(observe, (response)=>{
+                observer.next(response);
             }, ()=>{
                 //error
             });
@@ -57,21 +61,21 @@ export class Client {
     }
     
 
-    post(uri: string, buffer: Buffer = null) : Promise<Packet>{
+    post(uri: string, buffer: Buffer = null) : Promise<Response>{
         return new Promise((resolve, reject)=>{
             let packet = this.makePacket(MessageType.CON, MessageCode.POST, uri, buffer);
             this.sendMessage(packet, resolve, reject);
         });
     }
 
-    put(uri: string, buffer: Buffer = null) : Promise<Packet>{
+    put(uri: string, buffer: Buffer = null) : Promise<Response>{
         return new Promise((resolve, reject)=>{
             let packet = this.makePacket(MessageType.CON, MessageCode.PUT, uri, buffer);
             this.sendMessage(packet, resolve, reject);
         });
     }
 
-    delte(uri: string) : Promise<Packet>{
+    delte(uri: string) : Promise<Response>{
         return new Promise((resolve, reject)=>{
             let packet = this.makePacket(MessageType.CON, MessageCode.DELETE, uri, Buffer.from([]));
             this.sendMessage(packet, resolve, reject);

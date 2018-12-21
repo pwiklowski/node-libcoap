@@ -1,4 +1,4 @@
-import { Client } from "./client";
+import { Client, Response } from "./client";
 import { Packet } from "./packet";
 import * as cbor from "borc"
 
@@ -18,9 +18,9 @@ let client = new Client("127.0.0.1", 5683);
 // }).catch(()=>{
 //     console.log("timeout");
 // });
-client.observe("/switch").subscribe((message:Packet)=>{
-    console.log("received response", message);
-    console.log(message.getPayloadObject());
+client.observe("/switch").subscribe((response:Response)=>{
+    console.log("received response", response.packet);
+    console.log(response.packet.getPayloadObject());
 });
 
 
