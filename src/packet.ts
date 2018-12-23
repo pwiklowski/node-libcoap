@@ -132,7 +132,7 @@ export class Packet {
 		const type = (buf[0] >>> 4) & 0b11;
 		const tokenLength = buf[0] & 0b1111;
 		const code = MessageCode.from(buf[1]);
-		const messageId = buf[2] * (buf[3]<<8);
+		const messageId = buf[3] | (buf[2]<<8);
 
 		const token = Buffer.alloc(tokenLength);
 		if (tokenLength > 0) buf.copy(token, 0, 4, 4 + tokenLength);
@@ -163,7 +163,7 @@ export class Packet {
 		let offset = 0;
 		ret[offset++] = ((this.version & 0b11) << 6) + ((this.type & 0b11) << 4) + (tokenLength & 0b1111);
 		ret[offset++] = this.code.value;
-		ret[offset++] = (this.messageId >>> 8) & 0xff;
+		ret[offset++] = (this.messageId >> 8) & 0xff;
 		ret[offset++] = this.messageId & 0xff;
 
 		if (tokenLength > 0) {
