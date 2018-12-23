@@ -82,7 +82,8 @@ export class Client {
         });
     }
 
-    private makePacket(type: MessageType, code: MessageCode, uri: string, buffer: Buffer) {
+    private makePacket(type: MessageType, code: MessageCode, uri: string, buffer: Buffer,
+         token: Buffer = undefined, messaggeId: number = undefined) {
 
         let options = new Options();
         if (uri) {
@@ -91,8 +92,20 @@ export class Client {
             }));
         }
         let tokenBuf = new Buffer(this.TOKEN_LENGTH);
-        tokenBuf.writeUInt32BE(this.token++, 0);
-        let packet = new Packet(type, code, this.messageId++,
+
+        if (token !== undefined){
+            token.copy(tokenBuf);
+        }else{
+            tokenBuf.writeUInt32BE(this.token++, 0);
+        }
+
+        let mid = messaggeId;
+
+        if (mid === undefined) {
+            mid = this.messageId++;
+        }
+
+        let packet = new Packet(type, code, mid,
             tokenBuf, options, buffer);
         return packet;
     }
@@ -115,7 +128,7 @@ export class Client {
     }
 
     private ack(packet: Packet) {
-        let p = this.makePacket(MessageType.ACK, packet.code, "", Buffer.from([]));
         this.sendMessage(p,()=>{}, ()=>{});
+        let p = this.makePacket(MessageType.ACK, packet.code, "", Buffer.from([]), packet.token, packet.messageId);
     }
 }
