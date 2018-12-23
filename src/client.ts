@@ -99,7 +99,7 @@ export class Client {
 
     sendMessage(packet : Packet, resolve, reject) {
         this.callbacks.set(packet.token.toString('hex'), resolve);
-        let timout = () => {
+        let timeout = () => {
             reject();
             this.callbacks.delete(packet.token.toString('hex'));
             this.timouts.delete(packet.token.toString('hex'));
@@ -107,10 +107,10 @@ export class Client {
         setTimeout(()=>{
             let timeout = this.timouts.get(packet.token.toString('hex'));
             if (timeout !== undefined) {
-                timout();
+                timeout();
             }
         }, 3000);
-        this.timouts.set(packet.token.toString('hex'), timout);
+        this.timouts.set(packet.token.toString('hex'), timeout);
         this.socket.send(packet.serialize(), this.port, this.address);
     }
 
