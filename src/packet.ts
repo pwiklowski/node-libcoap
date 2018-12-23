@@ -102,11 +102,13 @@ export class Options extends Array {
 
 	static parse(options:Options, buf:Buffer):number{
 		let offset = 0;
+		let num = 0;
 		while(buf[offset] !== 0xFF && buf[offset] !== undefined) {
 			let number = buf[offset] >> 4;
 			let length = buf[offset] & 0xF;
-			options.push(new Option(number, buf.slice(offset+1, offset+length+1)));
+			options.push(new Option(number+num, buf.slice(offset+1, offset+length+1)));
 			offset += length + 1;
+			num = number + num;
 		}
 		return offset;
 	}
