@@ -111,24 +111,27 @@ export class Client {
     }
 
     sendMessage(packet : Packet, resolve, reject) {
-        this.callbacks.set(packet.token.toString('hex'), resolve);
-        let timeout = () => {
-            reject();
-            this.callbacks.delete(packet.token.toString('hex'));
-            this.timouts.delete(packet.token.toString('hex'));
-        }
-        setTimeout(()=>{
-            let timeout = this.timouts.get(packet.token.toString('hex'));
-            if (timeout !== undefined) {
-                timeout();
+        if (resolve != null){
+            this.callbacks.set(packet.token.toString('hex'), resolve);
+            let timeout = () => {
+                reject();
+                this.callbacks.delete(packet.token.toString('hex'));
+                this.timouts.delete(packet.token.toString('hex'));
             }
-        }, 3000);
-        this.timouts.set(packet.token.toString('hex'), timeout);
+            setTimeout(()=>{
+                let timeout = this.timouts.get(packet.token.toString('hex'));
+                if (timeout !== undefined) {
+                    timeout();
+                }
+            }, 3000);
+            this.timouts.set(packet.token.toString('hex'), timeout);
+        }
+
         this.socket.send(packet.serialize(), this.port, this.address);
     }
 
     private ack(packet: Packet) {
-        this.sendMessage(p,()=>{}, ()=>{});
         let p = this.makePacket(MessageType.ACK, packet.code, "", Buffer.from([]), packet.token, packet.messageId);
+        this.sendMessage(p, null, null);
     }
 }
